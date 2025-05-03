@@ -40,13 +40,6 @@ def rate_limited_post(endpoint: str, body: str):
         'Content-Type':  'text/plain',
     }
     url = f'{IGDB_API_URL}/{endpoint}'
-    print(f'\n>>> REQUEST to IGDB /{endpoint}')
-    print('Headers:')
-    for k, v in headers.items():
-        print(f'  {k}: {v}')
-    print('Body:')
-    print(body)
-    print('URL:', url)
     resp = requests.post(url, headers=headers, data=body)
     resp.raise_for_status()
     return resp.json()
@@ -108,7 +101,7 @@ def fetch_games(total, page_size):
     while fetched < total:
         batch = min(page_size, total - fetched)
         body = (
-            f'fields name,summary,storyline,release_dates,rating; '
+            f'fields name,summary,storyline,release_dates,rating,genres; '
             f'offset {offset}; limit {batch};'
         )
         items = rate_limited_post('games', body)
