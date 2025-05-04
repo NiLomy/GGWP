@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# ЗАПУСК: python import_igdb.py --client-id ИДЕНТИФИКАТОР --token ТОКЕН
+# ЗАПУСК: python import_igdb.py --client-id 8wqmm7x1n2xxtnz94lb8mthadhtgrt --token ovbq0hwscv58hu46yxn50hovt4j8kj
 
 import os
 import sys
