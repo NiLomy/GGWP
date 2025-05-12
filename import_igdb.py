@@ -123,7 +123,8 @@ def fetch_games(total, page_size):
                     id=gid,
                     defaults={
                         'name':         it.get('name', ''),
-                        'description':  it.get('storyline',''),
+                        'description':  it.get('summary', ''),
+                        'storyline': it.get('storyline', ''),
                         'release_date': release_date,
                         'rating':       it.get('rating'),
                     }
