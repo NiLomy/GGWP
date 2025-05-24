@@ -14,12 +14,28 @@ from .models import Game
 from .serializers import GameSerializer
 
 
+from django.db.models import Q, Case, When, IntegerField
+
 class GameViewSet(viewsets.ModelViewSet):
     authentication_classes = (JWTAuthentication, CsrfExemptSessionAuthentication)
-    permission_classes = [permissions.IsAuthenticated]  # Проверка аутентификации
-    queryset = Game.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = GameSerializer
+    queryset = Game.objects.all()
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search = self.request.query_params.get('search', '').strip()
+        if search:
+            queryset = queryset.annotate(
+                name_match=Case(
+                    When(name__icontains=search, then=1),
+                    default=0,
+                    output_field=IntegerField(),
+                )
+            ).filter(
+                Q(name__icontains=search) | Q(description__icontains=search)
+            ).order_by('-name_match')
+        return queryset[:20]
 
 class GenreViewSet(viewsets.ModelViewSet):
     authentication_classes = (JWTAuthentication, CsrfExemptSessionAuthentication)
