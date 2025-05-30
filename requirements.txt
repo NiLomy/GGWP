@@ -7,3 +7,6 @@ django-cors-headers==4.7.0
 numpy
 sentence_transformers
 voyager
+numpy
+sentence_transformers
+voyager

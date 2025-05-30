@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# ЗАПУСК: python import_igdb.py --client-id 8wqmm7x1n2xxtnz94lb8mthadhtgrt --client-secret ovbq0hwscv58hu46yxn50hovt4j8kj
+# ЗАПУСК: python import_igdb.py --clear --client-id 8wqmm7x1n2xxtnz94lb8mthadhtgrt --client-secret ovbq0hwscv58hu46yxn50hovt4j8kj
 
 import os
 import sys
@@ -8,6 +8,9 @@ import argparse
 import time
 import django
 import requests
+from voyager import Index
+
+from index import create_index, save_index, get_index
 
 # --- Настройка Django ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -83,10 +86,11 @@ def fetch_genres():
             )
     print(f'Imported {Genre.objects.count()} genres.')
 
-def fetch_games(total, page_size):
+def fetch_games(total, page_size) -> list[Game]:
     print(f'Fetching {total} games in batches of {page_size}…')
     offset = 0
     fetched = 0
+    games = []
     while fetched < total:
         batch = min(page_size, total - fetched)
         body = (
@@ -114,6 +118,7 @@ def fetch_games(total, page_size):
                         'rating':       it.get('rating'),
                     }
                 )
+                games.append(game_obj)
                 if 'genres' in it and hasattr(game_obj, 'genres'):
                     game_obj.genres.set(it['genres'])
 
@@ -121,9 +126,30 @@ def fetch_games(total, page_size):
         offset  += len(items)
         print(f'  → Imported {fetched}/{total} games…')
     print('Done importing games.')
+    return games
+
+def fill_index(games: list[Game], index: Index):
+    print("Loading transformer...")
+    from sentence_transformers import SentenceTransformer
+    transformer = SentenceTransformer('all-MiniLM-L6-v2')
+
+    print("Embedding descriptions...")
+    summaries = [f"{game.description} {game.storyline}" for game in games]
+    embeddings = transformer.encode(summaries)
+
+    print("Filling index...")
+    ids = [game.id for game in games]
+    index.add_items(embeddings, ids=ids)
+    save_index(index)
+
+    print("Done creating index.")
 
 if __name__ == '__main__':
     if args.clear:
         clear_tables()
+        index = create_index()
+    else:
+        index = get_index()
     fetch_genres()
-    fetch_games(args.total_games, args.batch_size)
+    games = fetch_games(args.total_games, args.batch_size)
+    fill_index(games, index)
