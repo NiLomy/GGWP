@@ -5,6 +5,8 @@ from voyager import Index, Space
 index = None
 index_path = "res/game_index.voyager"
 
+transformer = None
+
 
 def get_index(path: str = index_path) -> Index:
     global index
@@ -41,3 +43,11 @@ def save_index(new_index: Index, path: str = index_path) -> Index:
     index.save(path)
 
     return index
+
+
+def get_transformer():
+    global transformer
+    if transformer is None:
+        from sentence_transformers import SentenceTransformer
+        transformer = SentenceTransformer('all-MiniLM-L6-v2')
+    return transformer
