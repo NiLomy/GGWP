@@ -1,15 +1,37 @@
-from django.contrib.auth import authenticate
-from rest_framework import generics
+from django.contrib.auth import get_user_model
+from rest_framework import generics, status
+from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import RegisterSerializer, LoginSerializer
+from .serializers import LoginSerializer
+from .serializers import RegisterSerializer
+
+User = get_user_model()
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        # Создаем пару токенов для нового пользователя
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+
+        # Формируем ответ с данными пользователя и токенами
+        response_data = {
+            "access": access_token,
+            "refresh": refresh_token,
+        }
+        return Response(response_data, status=status.HTTP_201_CREATED)
+
 
 class LoginView(APIView):
     def post(self, request):
@@ -17,6 +39,7 @@ class LoginView(APIView):
         serializer.is_valid(raise_exception=True)
 
         return Response(serializer.validated_data)
+
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
