@@ -4,3 +4,6 @@ djangorestframework==3.14.0
 requests
 djangorestframework-simplejwt
 django-cors-headers==4.7.0
+numpy
+sentence_transformers
+voyager
