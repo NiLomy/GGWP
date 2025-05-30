@@ -1,5 +1,9 @@
 from django.db import models
 from django.conf import settings
+from django.dispatch import receiver
+from django.db.models.signals import post_save, post_delete
+from index import get_transformer, get_index, save_index
+
 
 class Genre(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -26,3 +30,20 @@ class UserGame(models.Model):
 
     class Meta:
         unique_together = ('user', 'game')
+
+
+@receiver(post_save, sender=Game)
+def game_post_save(sender, instance, **kwargs):
+    summary = f"{instance.description} {instance.storyline}"
+    embedding = get_transformer().encode(summary)
+
+    index = get_index()
+    index.add_item(embedding, id=instance.id)
+    save_index(index)
+
+
+@receiver(post_delete, sender=Game)
+def game_post_delete(sender, instance, **kwargs):
+    index = get_index()
+    index.mark_deleted(id=instance.id)
+    save_index(index)

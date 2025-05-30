@@ -123,7 +123,7 @@ def fetch_games(total, page_size) -> list[Game]:
                     game_obj.genres.set(it['genres'])
 
         fetched += len(items)
-        offset  += len(items)
+        offset += len(items)
         print(f'  → Imported {fetched}/{total} games…')
     print('Done importing games.')
     return games
