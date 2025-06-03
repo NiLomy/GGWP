@@ -96,7 +96,7 @@ def fetch_games(total, page_size) -> list[Game]:
         body = (
             f'fields name,summary,storyline,first_release_date,rating,genres; '
             f'where summary != null & storyline != null & first_release_date != null & game_type = 0;'
-            f'offset {offset}; limit {batch};'
+            f'sort rating desc; offset {offset}; limit {batch};'
         )
         items = rate_limited_post('games', body)
 
