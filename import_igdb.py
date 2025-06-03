@@ -36,6 +36,8 @@ RATE_LIMIT_DELAY = 0.3  # 4 запроса в сек → 0.25 с запасом
 
 access_token = None
 
+COVER_SIZE = "cover_big_2x"  # https://api-docs.igdb.com/#images
+
 def auth():
     global access_token
     auth_url = "https://id.twitch.tv/oauth2/token"
@@ -94,7 +96,7 @@ def fetch_games(total, page_size) -> list[Game]:
     while fetched < total:
         batch = min(page_size, total - fetched)
         body = (
-            f'fields name,summary,storyline,first_release_date,rating,genres; '
+            f'fields name,summary,storyline,first_release_date,rating,genres,cover.image_id;'
             f'where summary != null & storyline != null & first_release_date != null & game_type = 0;'
             f'sort rating desc; offset {offset}; limit {batch};'
         )
@@ -108,6 +110,13 @@ def fetch_games(total, page_size) -> list[Game]:
                 unix_ts = it.get('first_release_date')
                 release_date = time.strftime('%Y-%m-%d', time.gmtime(float(unix_ts))) if unix_ts else None
 
+                # https://api-docs.igdb.com/#images
+                cover_id = it.get('cover', {}).get('image_id', '')
+                if cover_id:
+                    cover_url = f"https://images.igdb.com/igdb/image/upload/t_{COVER_SIZE}/{cover_id}.jpg"
+                else:
+                    cover_url = ""
+
                 game_obj, _ = Game.objects.update_or_create(
                     id=gid,
                     defaults={
@@ -115,6 +124,7 @@ def fetch_games(total, page_size) -> list[Game]:
                         'description':  it.get('summary', ''),
                         'storyline':    it.get('storyline', ''),
                         'release_date': release_date,
+                        'image_url':    cover_url,
                         'rating':       it.get('rating'),
                     }
                 )

@@ -17,6 +17,7 @@ class Game(models.Model):
     description = models.TextField(blank=True)
     storyline = models.TextField(blank=True)
     release_date = models.DateField(null=True, blank=True)
+    image_url = models.CharField(max_length=512, blank=True)
     rating = models.DecimalField(max_digits=3, decimal_places=1, null=True, blank=True)
     genres = models.ManyToManyField(Genre, related_name='games')
 
