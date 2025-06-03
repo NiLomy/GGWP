@@ -17,8 +17,8 @@ from .serializers import GameSerializer
 from django.db.models import Q, Case, When, IntegerField
 
 class GameViewSet(viewsets.ModelViewSet):
-    authentication_classes = (JWTAuthentication, CsrfExemptSessionAuthentication)
-    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = (CsrfExemptSessionAuthentication,)
+    permission_classes = [permissions.AllowAny]
     serializer_class = GameSerializer
     queryset = Game.objects.all()
 
